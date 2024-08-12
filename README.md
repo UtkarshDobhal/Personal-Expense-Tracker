@@ -3,16 +3,16 @@ Information - Daily planner for anyone.
 
 
 Languages Used -
-Python
-HTML
-CSS
-Javascript
-MySQL
+Python ||
+HTML ||
+CSS ||
+Javascript ||
+MySQL ||
 
 Concepts Used -
-NLP
-OOPS
-API calling
+NLP ||
+OOPS ||
+API calling ||
 
 
 
