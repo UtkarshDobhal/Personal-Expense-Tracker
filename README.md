@@ -1,22 +1,22 @@
 # Daily planner
-- Information - Daily planner for anyone.
+- Information - Daily planner for everyone.
 
 
-- Languages Used -
-Python ||
-HTML ||
-CSS ||
-Javascript ||
-MySQL ||
+- Languages Used - <br/>
+Python <br/>
+HTML <br/>
+CSS <br/>
+Javascript <br/>
+MySQL <br/>
 
-- Concepts Used -
-NLP ||
-OOPS ||
-API calling ||
+- Concepts Used - <br/>
+NLP <br/>
+OOPS <br/>
+API calling <br/>
 
 
 
-- Collaborators - 
-Utkarsh Dobhal ||
-Ayush Arya ||
-Utkarsh Kapil
+- Collaborators - <br/>
+Utkarsh Dobhal <br/>
+Ayush Arya <br/>
+Utkarsh Kapil <br/>
