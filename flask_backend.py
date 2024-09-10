@@ -65,14 +65,14 @@ def update_csv_headers(file_path, new_headers):
         # Read existing headers and rows if the file exists
         with open(file_path, 'r', newline='') as f:
             reader = csv.DictReader(f)
-            existing_headers = reader.fieldnames or []
+            existing_headers = ["Year", "Month", "Date"]
             rows = list(reader)
     except FileNotFoundError:
         existing_headers = []
         rows = []
 
     # Combine existing headers with new headers, only adding new ones
-    updated_headers = list(set(existing_headers + list(new_headers)))
+    updated_headers = existing_headers + new_headers
 
     # If there are new headers to add, rewrite the file with new headers and old rows
     if updated_headers != existing_headers:
@@ -105,38 +105,15 @@ def add_expenses():
     permanent_expenses = data.get('permanent_expenses', [])
     variable_expenses = data.get('variable_expenses', [])
     
-    # Include day, month, and year for expense tracking
-    day = data.get('day', None)
-    month = data.get('month', None)
-    year = data.get('year', None)
 
     permanent_file = os.path.join(CSV_DIR, f"{name}_Expenses_permanent.csv")
     variable_file = os.path.join(CSV_DIR, f"{name}_Expenses_variable.csv")
 
-    # Create base rows with date information
-    permanent_row = {"year": year, "month": month, "day": day}
-    variable_row = {"year": year, "month": month, "day": day}
-
-    # Add expenses to their respective rows
-    for expense in permanent_expenses:
-        permanent_row[expense] = expense
-    for expense in variable_expenses:
-        variable_row[expense] = expense
-    
-    print(permanent_row.keys())    
 
     # Update headers only if there are new expenses
-    update_csv_headers(permanent_file, permanent_row.keys())
-    update_csv_headers(variable_file, variable_row.keys())
+    update_csv_headers(permanent_file, permanent_expenses)
+    update_csv_headers(variable_file, variable_expenses)
 
-    # Append the permanent and variable expenses to CSV
-    # with open(permanent_file, 'a', newline='') as f:
-    #     writer = csv.DictWriter(f, fieldnames=permanent_row.keys())
-    #     writer.writerow(permanent_row)
-    
-    # with open(variable_file, 'a', newline='') as f:
-    #     writer = csv.DictWriter(f, fieldnames=variable_row.keys())
-    #     writer.writerow(variable_row)
 
     return jsonify({"status": "success", "message": "Expenses added to CSV files"})
 
