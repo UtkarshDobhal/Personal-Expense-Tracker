@@ -1,5 +1,5 @@
-# Daily planner
-- Information - Daily planner for everyone.
+# Personal Expense Tracker
+- Information - Personal financial tracker with insightful dashboards, investment suggestions and chatbot feature
 
 
 - Languages Used - <br/>
