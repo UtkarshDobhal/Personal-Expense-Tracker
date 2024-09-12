@@ -102,6 +102,7 @@ def show_login_page():
 def create_expense_files(user_data):
     response = requests.post('http://127.0.0.1:5000/create_expense_files', json=user_data)
     return response.status_code == 200
+
 # Function to display personal information and expenses page
 def show_personal_info_page():
     st.title(f"Welcome, {st.session_state['username']}")
@@ -126,8 +127,6 @@ def show_personal_info_page():
                 st.session_state['user_data'] = user_data
             else:
                 st.error("Failed to create files. Try again.")
-
-
 
     
     st.title("Add Type of Expense")
@@ -160,6 +159,10 @@ def show_personal_info_page():
 
     # Button to submit the data to Flask backend
     if st.button("Submit Expenses"):
+        # Save the selected expenses in session state
+        st.session_state['permanent_expenses'] = selected_permanent_expenses
+        st.session_state['variable_expenses'] = selected_variable_expenses
+        
         # Prepare the data to send to the backend
         data = {
             "name": name,
@@ -176,8 +179,52 @@ def show_personal_info_page():
         # Check the response from Flask
         if response.status_code == 200:
             st.success("Expenses successfully submitted and saved!")
+            st.session_state['page'] = 'expense_amount'
         else:
             st.error("Failed to submit expenses.")
+
+    if st.button("Logout"):
+        st.session_state['logged_in'] = False
+        st.session_state['page'] = 'login'
+        st.experimental_rerun()
+
+def show_expense_amount_page():
+    st.title("Enter Expense Amounts")
+
+    # Get the selected expenses from session state
+    permanent_expenses = st.session_state.get('permanent_expenses', [])
+    variable_expenses = st.session_state.get('variable_expenses', [])
+    user = st.session_state.get('user_data', [])
+    user_name = user.get('name')
+
+    # Allow user to enter amounts for permanent expenses
+    if permanent_expenses:
+        st.subheader("Enter amounts for Permanent Expenses")
+        permanent_expense_amounts = {}
+        for expense in permanent_expenses:
+            amount = st.number_input(f"Enter amount for {expense}", min_value=0)
+            permanent_expense_amounts[expense] = amount
+       
+
+    # Allow user to enter amounts for variable expenses
+    if variable_expenses:
+        st.subheader("Enter amounts for Variable Expenses")
+        variable_expense_amounts = {}
+        for expense in variable_expenses:
+            amount = st.number_input(f"Enter amount for {expense}", min_value=0)
+            variable_expense_amounts[expense] = amount
+
+    data_per = {"name": user_name, "permanent_expenses": permanent_expense_amounts}
+    data_var = {"name": user_name, "variable_expenses": variable_expense_amounts}        
+        
+
+    # Button to submit expense amounts
+    if st.button("Submit Expense Amounts"):
+        # Send the expense amounts to the backend (optional)
+        st.success("Expense amounts successfully saved!")
+        requests.post('http://127.0.0.1:5000/update_permanent_expenses', json=data_per)
+        requests.post('http://127.0.0.1:5000/update_variable_expenses', json=data_var) 
+
 
     if st.button("Logout"):
         st.session_state['logged_in'] = False
@@ -190,3 +237,5 @@ if not st.session_state['logged_in']:
 else:
     if st.session_state['page'] == 'personal_info':
         show_personal_info_page()
+    elif st.session_state['page'] == 'expense_amount':
+        show_expense_amount_page()
