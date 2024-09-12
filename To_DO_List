@@ -1,10 +1,10 @@
 To DO List:
 
-create expense csv and page   (Done)
+create expense csv and page  (Done)
 create personal data csv and page (Done)
-seperate login and personal data page
-authenticate
-add expenses page
+seperate login and personal data page (Done)
+authenticate (Done)
+add expenses page (Done)
 move the csv to db
 create dashboard
 create chatbot

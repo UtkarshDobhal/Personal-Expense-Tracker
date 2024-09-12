@@ -1,9 +1,13 @@
-from flask import Flask, request, jsonify
-import csv
+from flask import Flask, request, jsonify, session
 import os
+import csv
 import pandas as pd
+from datetime import datetime
 
 app = Flask(__name__)
+
+# Set the secret key for session management
+app.secret_key = 'qwerty12345'  # Replace with a secure, random key
 
 # Directory to store the CSV files
 CSV_DIR = './expenses_csv'
@@ -65,14 +69,14 @@ def update_csv_headers(file_path, new_headers):
         # Read existing headers and rows if the file exists
         with open(file_path, 'r', newline='') as f:
             reader = csv.DictReader(f)
-            existing_headers = reader.fieldnames or []
+            existing_headers = ["Year", "Month", "Date"]
             rows = list(reader)
     except FileNotFoundError:
         existing_headers = []
         rows = []
 
     # Combine existing headers with new headers, only adding new ones
-    updated_headers = list(set(existing_headers + list(new_headers)))
+    updated_headers = existing_headers + new_headers
 
     # If there are new headers to add, rewrite the file with new headers and old rows
     if updated_headers != existing_headers:
@@ -82,6 +86,45 @@ def update_csv_headers(file_path, new_headers):
             writer.writerows(rows)
 
     return updated_headers
+
+def update_exp(data, name,type):
+    # Get the current date
+    current_date = datetime.now()
+    year = current_date.year
+    month = current_date.month
+    day = current_date.day
+
+    # Extract the dynamic expense category ('permanent_expenses' in this case)
+    expense_category = list(data.keys())[1]  # Get the second key (assuming it's expenses)
+    expenses = data[expense_category]  # Fetch the expenses dictionary dynamically
+
+    with open(f"expenses_csv\\{name}_{type}.csv", 'a', newline='') as csv_file:
+        # Define the fieldnames, starting with date-related fields
+        fieldnames = ["Year", "Month", "Day"]
+        
+        # Dynamically add all keys from the expenses dictionary to the fieldnames
+        fieldnames.extend(expenses.keys())
+
+        # Create a DictWriter object
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        # Prepare a single dictionary to write the entire row
+        row_data = {
+            'Year': year,  # Insert current year
+            'Month': month,  # Insert current month
+            'Day': day  # Insert current day
+        }
+
+        # Dynamically update the row data with the fetched expenses
+        row_data.update(expenses)
+
+        # Write the header if it's a new file
+        if csv_file.tell() == 0:  # Check if the file is empty
+            writer.writeheader()
+
+        # Write the entire row in one go
+        writer.writerow(row_data)
+
 
 # Route to create CSV files for personal and expense data
 @app.route('/create_expense_files', methods=['POST'])
@@ -94,6 +137,7 @@ def create_expense_files_route():
     
     # Add the user's personal data to the personal_data.csv
     add_personal_data(data)
+    session['name'] = name
     
     return jsonify({"status": "success", "message": "Personal data and CSV files created"})
 
@@ -105,40 +149,44 @@ def add_expenses():
     permanent_expenses = data.get('permanent_expenses', [])
     variable_expenses = data.get('variable_expenses', [])
     
-    # Include day, month, and year for expense tracking
-    day = data.get('day', None)
-    month = data.get('month', None)
-    year = data.get('year', None)
 
     permanent_file = os.path.join(CSV_DIR, f"{name}_Expenses_permanent.csv")
     variable_file = os.path.join(CSV_DIR, f"{name}_Expenses_variable.csv")
 
-    # Create base rows with date information
-    permanent_row = {"year": year, "month": month, "day": day}
-    variable_row = {"year": year, "month": month, "day": day}
-
-    # Add expenses to their respective rows
-    for expense in permanent_expenses:
-        permanent_row[expense] = expense
-    for expense in variable_expenses:
-        variable_row[expense] = expense
-    
-    print(permanent_row.keys())    
 
     # Update headers only if there are new expenses
-    update_csv_headers(permanent_file, permanent_row.keys())
-    update_csv_headers(variable_file, variable_row.keys())
-
-    # Append the permanent and variable expenses to CSV
-    # with open(permanent_file, 'a', newline='') as f:
-    #     writer = csv.DictWriter(f, fieldnames=permanent_row.keys())
-    #     writer.writerow(permanent_row)
+    update_csv_headers(permanent_file, permanent_expenses)
+    update_csv_headers(variable_file, variable_expenses)
     
-    # with open(variable_file, 'a', newline='') as f:
-    #     writer = csv.DictWriter(f, fieldnames=variable_row.keys())
-    #     writer.writerow(variable_row)
+
 
     return jsonify({"status": "success", "message": "Expenses added to CSV files"})
+
+@app.route('/update_permanent_expenses', methods=['POST'])
+def update_per_expenses():
+    data = request.json
+    print(data)
+    name = data["name"]
+    print(name)  
+    if not name:
+        return jsonify({"status": "error", "message": "User not logged in"})
+    type = "Expenses_permanent"
+    update_exp(data, name, type)
+    return jsonify({"status": "success", "message": "Expenses updated successfully"})
+
+@app.route('/update_variable_expenses', methods=['POST'])
+def update_var_expenses():
+    data = request.json
+    name = data["name"]  
+    if not name:
+        return jsonify({"status": "error", "message": "User not logged in"})
+    type = "Expenses_variable"
+    update_exp(data, name, type)
+    return jsonify({"status": "success", "message": "Expenses updated successfully"})
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
